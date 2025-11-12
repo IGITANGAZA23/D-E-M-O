@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Librarian } from './entities/librarian.entity';
 import { CreateLibrarianDto } from './dto/create-librarian.dto';
 import { UpdateLibrarianDto } from './dto/update-librarian.dto';
