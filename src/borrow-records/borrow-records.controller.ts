@@ -19,6 +19,7 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 export class BorrowRecordsController {
   constructor(private readonly borrowRecordsService: BorrowRecordsService) {}
 
+  // Static routes should come before parameterized routes
   @Post('borrow')
   @Roles(Role.User)
   async borrowBook(
@@ -26,12 +27,6 @@ export class BorrowRecordsController {
     @GetUser() user: any,
   ) {
     return this.borrowRecordsService.borrowBook(user.userId, borrowBookDto);
-  }
-
-  @Post('return/:bookId')
-  @Roles(Role.User)
-  async returnBook(@Param('bookId') bookId: string, @GetUser() user: any) {
-    return this.borrowRecordsService.returnBook(user.userId, +bookId);
   }
 
   @Get('my-books')
@@ -50,6 +45,13 @@ export class BorrowRecordsController {
   @Roles(Role.Librarian)
   async getAllBorrowRecords() {
     return this.borrowRecordsService.getAllBorrowRecords();
+  }
+
+  // Parameterized routes should come after static routes
+  @Post('return/:bookId')
+  @Roles(Role.User)
+  async returnBook(@Param('bookId') bookId: string, @GetUser() user: any) {
+    return this.borrowRecordsService.returnBook(user.userId, +bookId);
   }
 }
 
