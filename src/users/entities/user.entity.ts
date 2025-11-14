@@ -25,7 +25,7 @@ export class User {
   @Column({ type: 'text', nullable: true })
   twoFactorSecret: string | null;
 
-  @Column({ default: false })
+  @Column({ default: true })
   isTwoFactorEnabled: boolean;
 
   @CreateDateColumn()
