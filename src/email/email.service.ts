@@ -48,7 +48,7 @@ export class EmailService {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Notification - Library Management System</title>
+    <title>Login Notification - RCA Library Management System</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
     <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6; padding: 20px;">
@@ -59,7 +59,7 @@ export class EmailService {
                     <tr>
                         <td style="background: linear-gradient(135deg, ${roleColor} 0%, ${roleColor}dd 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">
-                                ${roleIcon} Library Management System
+                                ${roleIcon} RCA Library Management System
                             </h1>
                         </td>
                     </tr>
@@ -132,7 +132,7 @@ export class EmailService {
                             
                             <p style="margin: 20px 0 0 0; color: #4B5563; font-size: 16px; line-height: 1.6;">
                                 Best regards,<br>
-                                <strong>The Library Management Team</strong>
+                                <strong>The RCA Library Management Team</strong>
                             </p>
                         </td>
                     </tr>
@@ -157,7 +157,7 @@ export class EmailService {
     `;
 
     const text = `
-Library Management System - Login Notification
+RCA Library Management System - Login Notification
 
 Hello ${name},
 
@@ -174,7 +174,7 @@ Security Notice: If you didn't perform this login, please contact our support te
 Thank you for using our Library Management System!
 
 Best regards,
-The Library Management Team
+The RCA Library Management Team
 
 ---
 This is an automated notification. Please do not reply to this email.
@@ -182,7 +182,7 @@ This is an automated notification. Please do not reply to this email.
     `;
 
     const mailOptions = {
-      from: `"Library Management System" <${this.configService.get<string>('SMTP_USER')}>`,
+      from: `"RCA Library Management System" <${this.configService.get<string>('SMTP_USER')}>`,
       to: email,
       subject: `✅ Login Successful - ${roleDisplay} Account`,
       text: text,
@@ -226,7 +226,7 @@ This is an automated notification. Please do not reply to this email.
                     <tr>
                         <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">
-                                🔐 Two-Factor Authentication
+                                🔐 Confirm Login to RCA Library Mnagement System
                             </h1>
                         </td>
                     </tr>
