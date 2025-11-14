@@ -1,20 +1,12 @@
-# Two-Factor Authentication (2FA) Guide
+# Simple Email-Based 2FA Guide
 
-This guide explains how to set up and use Two-Factor Authentication (2FA) in the Library Management System.
+This guide explains how to use the simple email-based Two-Factor Authentication (2FA) in the Library Management System.
 
 ## 🔐 What is 2FA?
 
-Two-Factor Authentication adds an extra layer of security to your account. After entering your password, you'll need to provide a 6-digit code from an authenticator app on your phone.
+Two-Factor Authentication adds an extra layer of security to your account. After entering your password, you'll receive a 6-digit code via email that you need to enter to complete your login.
 
-## 📱 Supported Authenticator Apps
-
-You can use any TOTP-compatible authenticator app:
-- **Google Authenticator** (iOS/Android)
-- **Microsoft Authenticator** (iOS/Android)
-- **Authy** (iOS/Android/Desktop)
-- **1Password** (iOS/Android/Desktop)
-- **LastPass Authenticator** (iOS/Android)
-- Any other TOTP-compatible app
+**No phone apps, no QR codes - just simple email codes!** 📧
 
 ## 🚀 Setting Up 2FA
 
@@ -32,60 +24,26 @@ Body: {
 
 Save the `access_token` from the response.
 
-### Step 2: Generate 2FA Secret and QR Code
+### Step 2: Enable 2FA
 
-Use your access token to generate a 2FA secret:
-
-```bash
-POST http://localhost:3000/two-factor/setup/user
-Headers: {
-  "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "2FA secret generated. Scan the QR code with your authenticator app and then enable 2FA.",
-  "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANS...",
-  "manualEntryKey": "JBSWY3DPEHPK3PXP",
-  "secret": "JBSWY3DPEHPK3PXP"
-}
-```
-
-### Step 3: Scan QR Code
-
-1. Open your authenticator app (e.g., Google Authenticator)
-2. Tap "Add account" or the "+" button
-3. Choose "Scan QR code"
-4. Scan the QR code from the response (use the `qrCode` field - it's a base64 data URL)
-
-**Alternative: Manual Entry**
-If you can't scan the QR code, manually enter the `manualEntryKey` into your authenticator app.
-
-### Step 4: Enable 2FA
-
-After scanning the QR code, your authenticator app will show a 6-digit code. Use this code to enable 2FA:
+Simply enable 2FA with one request:
 
 ```bash
 POST http://localhost:3000/two-factor/enable/user
 Headers: {
   "Authorization": "Bearer YOUR_ACCESS_TOKEN"
 }
-Body: {
-  "token": "123456"
-}
 ```
 
 **Response:**
 ```json
 {
-  "message": "2FA has been successfully enabled for your account.",
+  "message": "2FA has been successfully enabled. You will receive a code via email when logging in.",
   "enabled": true
 }
 ```
 
-✅ **2FA is now enabled!** You'll need to provide a 2FA code every time you login.
+✅ **That's it! 2FA is now enabled!** No QR codes, no phone apps needed.
 
 ## 🔑 Logging In with 2FA
 
@@ -106,7 +64,7 @@ Body: {
 {
   "requiresTwoFactor": true,
   "tempToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "message": "2FA verification required. Please provide your 2FA code.",
+  "message": "2FA code has been sent to your email. Please check your inbox and provide the code.",
   "user": {
     "id": 1,
     "email": "user@example.com",
@@ -116,9 +74,11 @@ Body: {
 }
 ```
 
+**📧 Check your email!** You'll receive a beautiful email with a 6-digit code.
+
 ### Step 2: Verify 2FA Code
 
-Get the 6-digit code from your authenticator app and verify it:
+Get the 6-digit code from your email and verify it:
 
 ```bash
 POST http://localhost:3000/auth/verify-2fa/user
@@ -194,45 +154,64 @@ POST /auth/login/user
 ```bash
 # Step 1: Login
 POST /auth/login/user
+→ Sends code to email
 → Returns tempToken (requires 2FA)
 
-# Step 2: Verify 2FA
+# Step 2: Check your email for the 6-digit code
+
+# Step 3: Verify 2FA
 POST /auth/verify-2fa/user
+Body: {
+  "tempToken": "...",
+  "twoFactorToken": "123456"
+}
 → Returns access_token
 ```
 
+## 📧 Email Code Details
+
+- **Code Format:** 6 digits (e.g., `123456`)
+- **Expiration:** 10 minutes
+- **One-time use:** Each code can only be used once
+- **Automatic sending:** Code is sent automatically when you login with 2FA enabled
+
 ## 🛡️ Security Best Practices
 
-1. **Keep your authenticator app secure** - Don't share your phone or authenticator app
-2. **Backup codes** - Some authenticator apps allow you to backup your accounts
-3. **Multiple devices** - You can add the same 2FA secret to multiple devices
-4. **Time sync** - Make sure your phone's time is synchronized (authenticator apps require accurate time)
+1. **Keep your email secure** - Your email account is your second factor
+2. **Don't share codes** - Never share your 2FA codes with anyone
+3. **Check email regularly** - Make sure you can access your email when logging in
+4. **Use a secure email** - Use a strong password and 2FA on your email account too
 
 ## 🐛 Troubleshooting
 
-### "Invalid 2FA token"
-- Make sure you're using the current 6-digit code from your authenticator app
-- Codes expire every 30 seconds - get a fresh code
-- Check that your phone's time is synchronized
+### "2FA code has been sent to your email" but no email received
+- Check your spam/junk folder
+- Verify your email address is correct
+- Make sure email service is configured (see EMAIL_SETUP.md)
+- Wait a few seconds - emails can take a moment to arrive
+
+### "2FA code has expired"
+- Codes expire after 10 minutes
+- Login again to get a new code
+
+### "No 2FA code found"
+- The code may have expired or been used
+- Login again to get a new code
+
+### "Invalid 2FA code"
+- Make sure you're entering all 6 digits
+- Check that you're using the most recent code from your email
+- Codes are case-sensitive (though they're all numbers)
 
 ### "Invalid or expired temporary token"
-- The temporary token expires after 5 minutes
-- Login again to get a new temporary token
-
-### "2FA is not set up for this account"
-- You need to set up 2FA first using `/two-factor/setup/:role`
-- Make sure you've enabled 2FA after scanning the QR code
-
-### QR Code not scanning
-- Use the `manualEntryKey` to manually add the account to your authenticator app
-- Make sure the QR code image is clear and well-lit
+- The temporary token expires after 10 minutes
+- Login again to get a new temporary token and code
 
 ## 📝 API Endpoints Summary
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/two-factor/setup/:role` | Generate 2FA secret and QR code | Yes |
-| POST | `/two-factor/enable/:role` | Enable 2FA after verification | Yes |
+| POST | `/two-factor/enable/:role` | Enable 2FA | Yes |
 | GET | `/two-factor/status/:role` | Check if 2FA is enabled | Yes |
 | DELETE | `/two-factor/disable/:role` | Disable 2FA | Yes |
 | POST | `/auth/verify-2fa/:role` | Verify 2FA code during login | No |
@@ -242,12 +221,19 @@ POST /auth/verify-2fa/user
 All the same endpoints work for librarians - just replace `user` with `librarian` in the URLs:
 
 ```bash
-POST /two-factor/setup/librarian
 POST /two-factor/enable/librarian
 GET /two-factor/status/librarian
 DELETE /two-factor/disable/librarian
 POST /auth/verify-2fa/librarian
 ```
 
-Enjoy the enhanced security! 🔒
+## ✨ Features
 
+- ✅ **Simple** - No phone apps or QR codes needed
+- ✅ **Email-based** - Receive codes directly in your inbox
+- ✅ **Beautiful emails** - Professional, easy-to-read email templates
+- ✅ **Secure** - 6-digit codes expire in 10 minutes
+- ✅ **One-time use** - Each code can only be used once
+- ✅ **Automatic** - Codes are sent automatically when logging in
+
+Enjoy the simple and secure 2FA! 🔒📧

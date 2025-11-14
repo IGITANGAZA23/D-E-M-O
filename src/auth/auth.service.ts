@@ -55,6 +55,14 @@ export class AuthService {
 
     // Check if 2FA is enabled
     if (entity.isTwoFactorEnabled) {
+      // Send 2FA code via email
+      await this.twoFactorService.sendTwoFactorCode(
+        entity.id,
+        role,
+        entity.email,
+        entity.name,
+      );
+
       // Return a temporary token that requires 2FA verification
       const tempPayload: JwtPayload = {
         sub: entity.id,
@@ -62,13 +70,13 @@ export class AuthService {
         role: role,
       };
 
-      // Create a short-lived token for 2FA verification (5 minutes)
-      const tempToken = this.jwtService.sign(tempPayload, { expiresIn: '5m' });
+      // Create a short-lived token for 2FA verification (10 minutes)
+      const tempToken = this.jwtService.sign(tempPayload, { expiresIn: '10m' });
 
       return {
         requiresTwoFactor: true,
         tempToken: tempToken,
-        message: '2FA verification required. Please provide your 2FA code.',
+        message: '2FA code has been sent to your email. Please check your inbox and provide the code.',
         user: {
           id: entity.id,
           email: entity.email,
@@ -130,8 +138,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired temporary token');
     }
 
-    // Verify 2FA token
-    const isValid = await this.twoFactorService.verifyToken(
+    // Verify 2FA code
+    const isValid = await this.twoFactorService.verifyCode(
       decoded.sub,
       role,
       twoFactorToken,

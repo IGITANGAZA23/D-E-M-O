@@ -207,5 +207,138 @@ This is an automated notification. Please do not reply to this email.
       // Don't throw error - email failure shouldn't break login
     }
   }
+
+  async sendTwoFactorCode(email: string, name: string, code: string): Promise<void> {
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your 2FA Code - Library Management System</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">
+                                🔐 Two-Factor Authentication
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: 600;">
+                                Your 2FA Code
+                            </h2>
+                            
+                            <p style="margin: 0 0 20px 0; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                Hello <strong>${name}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                You're trying to log in to your Library Management System account. Use the code below to complete your login:
+                            </p>
+                            
+                            <!-- Code Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 20px 40px; border-radius: 8px; display: inline-block;">
+                                            <div style="font-size: 36px; font-weight: 700; color: #ffffff; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                                                ${code}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 30px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                This code will expire in <strong>10 minutes</strong>.
+                            </p>
+                            
+                            <!-- Security Notice -->
+                            <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 16px; border-radius: 4px; margin: 30px 0;">
+                                <p style="margin: 0; color: #92400E; font-size: 14px; line-height: 1.6;">
+                                    <strong>🔒 Security Notice:</strong> If you didn't request this code, please ignore this email and consider changing your password immediately.
+                                </p>
+                            </div>
+                            
+                            <p style="margin: 30px 0 0 0; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                Best regards,<br>
+                                <strong>The Library Management Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #F9FAFB; padding: 30px; text-align: center; border-top: 1px solid #E5E7EB;">
+                            <p style="margin: 0 0 10px 0; color: #6B7280; font-size: 12px; line-height: 1.6;">
+                                This is an automated email. Please do not reply to this email.
+                            </p>
+                            <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
+                                © ${new Date().getFullYear()} Library Management System. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Two-Factor Authentication Code
+
+Hello ${name},
+
+You're trying to log in to your Library Management System account. Use the code below to complete your login:
+
+${code}
+
+This code will expire in 10 minutes.
+
+Security Notice: If you didn't request this code, please ignore this email and consider changing your password immediately.
+
+Best regards,
+The Library Management Team
+
+---
+This is an automated email. Please do not reply to this email.
+© ${new Date().getFullYear()} Library Management System. All rights reserved.
+    `;
+
+    const mailOptions = {
+      from: `"Library Management System" <${this.configService.get<string>('SMTP_USER')}>`,
+      to: email,
+      subject: `🔐 Your 2FA Code: ${code}`,
+      text: text,
+      html: html,
+    };
+
+    if (!this.isEmailConfigured) {
+      this.logger.warn(`Email not configured - cannot send 2FA code to ${email}. Please set SMTP_USER and SMTP_PASS in .env file.`);
+      return;
+    }
+
+    try {
+      this.logger.log(`Sending 2FA code to ${email}...`);
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`✅ 2FA code email sent successfully to ${email}. Message ID: ${info.messageId}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to send 2FA code email to ${email}:`, error);
+      this.logger.error(`Error details: ${error.message}`);
+      throw error; // Throw error for 2FA - this is critical
+    }
+  }
 }
 

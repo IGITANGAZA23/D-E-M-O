@@ -1,93 +1,107 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as speakeasy from 'speakeasy';
-import * as QRCode from 'qrcode';
 import { User } from '../users/entities/user.entity';
 import { Librarian } from '../librarians/entities/librarian.entity';
-import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
+
+interface TwoFactorCode {
+  code: string;
+  userId: number;
+  role: 'user' | 'librarian';
+  expiresAt: Date;
+}
 
 @Injectable()
 export class TwoFactorService {
+  private readonly logger = new Logger(TwoFactorService.name);
+  // In-memory storage for 2FA codes (expires after 10 minutes)
+  private codes: Map<string, TwoFactorCode> = new Map();
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Librarian)
     private librarianRepository: Repository<Librarian>,
-    private configService: ConfigService,
-  ) {}
-
-  /**
-   * Generate a 2FA secret for a user
-   */
-  async generateSecret(userId: number, role: 'user' | 'librarian', email: string, name: string) {
-    const secret = speakeasy.generateSecret({
-      name: `Library Management (${email})`,
-      issuer: 'Library Management System',
-      length: 32,
-    });
-
-    // Save the secret temporarily (not enabled yet)
-    if (role === 'user') {
-      await this.userRepository.update(userId, {
-        twoFactorSecret: secret.base32,
-      });
-    } else {
-      await this.librarianRepository.update(userId, {
-        twoFactorSecret: secret.base32,
-      });
-    }
-
-    // Generate QR code
-    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
-
-    return {
-      secret: secret.base32,
-      qrCode: qrCodeUrl,
-      manualEntryKey: secret.base32,
-    };
+    private emailService: EmailService,
+  ) {
+    // Clean up expired codes every minute
+    setInterval(() => this.cleanupExpiredCodes(), 60000);
   }
 
   /**
-   * Verify a 2FA token
+   * Generate a random 6-digit code
    */
-  async verifyToken(
+  private generateCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  /**
+   * Send 2FA code via email
+   */
+  async sendTwoFactorCode(
     userId: number,
     role: 'user' | 'librarian',
-    token: string,
-  ): Promise<boolean> {
-    let entity: User | Librarian | null = null;
+    email: string,
+    name: string,
+  ): Promise<string> {
+    // Generate a 6-digit code
+    const code = this.generateCode();
 
-    if (role === 'user') {
-      entity = await this.userRepository.findOne({ where: { id: userId } });
-    } else {
-      entity = await this.librarianRepository.findOne({ where: { id: userId } });
-    }
+    // Store the code (expires in 10 minutes)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
-    if (!entity || !entity.twoFactorSecret) {
-      throw new BadRequestException('2FA is not set up for this account');
-    }
-
-    const verified = speakeasy.totp.verify({
-      secret: entity.twoFactorSecret,
-      encoding: 'base32',
-      token: token,
-      window: 2, // Allow 2 time steps (60 seconds) of tolerance
+    const codeKey = `${role}-${userId}`;
+    this.codes.set(codeKey, {
+      code,
+      userId,
+      role,
+      expiresAt,
     });
 
-    return verified;
+    // Send email with the code
+    await this.emailService.sendTwoFactorCode(email, name, code);
+
+    this.logger.log(`2FA code sent to ${email} for ${role} ${userId}`);
+
+    return code; // Return for testing purposes (in production, don't return)
   }
 
   /**
-   * Enable 2FA for a user after they verify the token
+   * Verify a 2FA code
    */
-  async enableTwoFactor(userId: number, role: 'user' | 'librarian', token: string): Promise<boolean> {
-    const isValid = await this.verifyToken(userId, role, token);
+  async verifyCode(
+    userId: number,
+    role: 'user' | 'librarian',
+    code: string,
+  ): Promise<boolean> {
+    const codeKey = `${role}-${userId}`;
+    const storedCode = this.codes.get(codeKey);
 
-    if (!isValid) {
-      throw new BadRequestException('Invalid 2FA token');
+    if (!storedCode) {
+      throw new BadRequestException('No 2FA code found. Please request a new code.');
     }
 
+    if (new Date() > storedCode.expiresAt) {
+      this.codes.delete(codeKey);
+      throw new BadRequestException('2FA code has expired. Please request a new code.');
+    }
+
+    if (storedCode.code !== code) {
+      throw new BadRequestException('Invalid 2FA code.');
+    }
+
+    // Code is valid - remove it (one-time use)
+    this.codes.delete(codeKey);
+
+    return true;
+  }
+
+  /**
+   * Enable 2FA for a user (no verification needed - just enable it)
+   */
+  async enableTwoFactor(userId: number, role: 'user' | 'librarian'): Promise<boolean> {
     if (role === 'user') {
       await this.userRepository.update(userId, {
         isTwoFactorEnabled: true,
@@ -99,6 +113,18 @@ export class TwoFactorService {
     }
 
     return true;
+  }
+
+  /**
+   * Clean up expired codes
+   */
+  private cleanupExpiredCodes(): void {
+    const now = new Date();
+    for (const [key, codeData] of this.codes.entries()) {
+      if (now > codeData.expiresAt) {
+        this.codes.delete(key);
+      }
+    }
   }
 
   /**
