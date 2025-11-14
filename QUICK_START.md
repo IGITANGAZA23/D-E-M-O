@@ -84,6 +84,130 @@ You'll receive a token in the response. Use it in the `Authorization` header for
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
+## 👤 Quick User Operations Guide
+
+### 1. Register a New User
+
+**Using PowerShell:**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/users/register" -Method Post -ContentType "application/json" -Body '{"email":"user@example.com","password":"password123","name":"John Doe"}'
+```
+
+**Using Postman:**
+- **Method:** `POST`
+- **URL:** `http://localhost:3000/users/register`
+- **Headers:** `Content-Type: application/json`
+- **Body (JSON):**
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123",
+    "name": "John Doe"
+  }
+  ```
+
+### 2. Login as User
+
+**Using PowerShell:**
+```powershell
+$response = Invoke-RestMethod -Uri "http://localhost:3000/auth/login/user" -Method Post -ContentType "application/json" -Body '{"email":"user@example.com","password":"password123"}'
+$token = $response.access_token
+Write-Host "Token: $token"
+```
+
+**Using Postman:**
+- **Method:** `POST`
+- **URL:** `http://localhost:3000/auth/login/user`
+- **Headers:** `Content-Type: application/json`
+- **Body (JSON):**
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+  ```
+- **Save the `access_token` from the response!**
+
+### 3. Borrow a Book
+
+**Prerequisites:**
+- You need to be logged in as a user (get token from step 2)
+- A book must exist in the database (create one as a librarian first)
+
+**Using PowerShell:**
+```powershell
+$token = "YOUR_USER_TOKEN_HERE"
+$headers = @{
+    "Authorization" = "Bearer $token"
+    "Content-Type" = "application/json"
+}
+Invoke-RestMethod -Uri "http://localhost:3000/borrow-records/borrow" -Method Post -Headers $headers -Body '{"bookId":1}'
+```
+
+**Using Postman:**
+- **Method:** `POST`
+- **URL:** `http://localhost:3000/borrow-records/borrow`
+- **Headers:**
+  - `Authorization: Bearer YOUR_USER_TOKEN_HERE`
+  - `Content-Type: application/json`
+- **Body (JSON):**
+  ```json
+  {
+    "bookId": 1
+  }
+  ```
+
+### 4. Return a Book
+
+**Using PowerShell:**
+```powershell
+$token = "YOUR_USER_TOKEN_HERE"
+$headers = @{
+    "Authorization" = "Bearer $token"
+}
+Invoke-RestMethod -Uri "http://localhost:3000/borrow-records/return/1" -Method Post -Headers $headers
+```
+
+**Using Postman:**
+- **Method:** `POST`
+- **URL:** `http://localhost:3000/borrow-records/return/1` (replace `1` with the book ID)
+- **Headers:**
+  - `Authorization: Bearer YOUR_USER_TOKEN_HERE`
+
+### 5. View My Borrowed Books
+
+**Using PowerShell:**
+```powershell
+$token = "YOUR_USER_TOKEN_HERE"
+$headers = @{
+    "Authorization" = "Bearer $token"
+}
+Invoke-RestMethod -Uri "http://localhost:3000/borrow-records/my-books" -Method Get -Headers $headers
+```
+
+**Using Postman:**
+- **Method:** `GET`
+- **URL:** `http://localhost:3000/borrow-records/my-books`
+- **Headers:**
+  - `Authorization: Bearer YOUR_USER_TOKEN_HERE`
+
+### 6. View My Borrow History
+
+**Using PowerShell:**
+```powershell
+$token = "YOUR_USER_TOKEN_HERE"
+$headers = @{
+    "Authorization" = "Bearer $token"
+}
+Invoke-RestMethod -Uri "http://localhost:3000/borrow-records/my-history" -Method Get -Headers $headers
+```
+
+**Using Postman:**
+- **Method:** `GET`
+- **URL:** `http://localhost:3000/borrow-records/my-history`
+- **Headers:**
+  - `Authorization: Bearer YOUR_USER_TOKEN_HERE`
+
 ## ✅ Verification Checklist
 
 - [ ] Node.js installed (`node --version`)
@@ -118,11 +242,17 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 ## 🎯 Test the API
 
-Once running, you can:
-1. **Register a user:** `POST /users/register`
-2. **Add a book (as librarian):** `POST /books` (with token)
-3. **Borrow a book (as user):** `POST /borrow-records/borrow` (with token)
-4. **View all books:** `GET /books` (with token)
+Once running, you can test user operations using the **Quick User Operations Guide** above, which includes:
+- Register a new user
+- Login as a user
+- Borrow a book
+- Return a book
+- View borrowed books and history
+
+**For librarian operations:**
+- **Add a book:** `POST /books` (requires librarian token)
+- **View all books:** `GET /books` (requires token)
+- **View all borrow records:** `GET /borrow-records/all` (requires librarian token)
 
 See README.md for full API documentation.
 
