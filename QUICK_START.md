@@ -234,6 +234,13 @@ Invoke-RestMethod -Uri "http://localhost:3000/borrow-records/my-history" -Method
 - Run `npm install` again
 - Delete `node_modules` and `package-lock.json`, then `npm install`
 
+**"Unexpected url ending" or "Bad Request" errors**
+- **Restart your server** after any code changes: Stop the server (Ctrl+C) and run `npm run start:dev` again
+- Make sure there are **no trailing slashes** in your URLs (e.g., use `/borrow-records/borrow` not `/borrow-records/borrow/`)
+- Verify you're using the correct HTTP method (POST for borrow/return, GET for viewing)
+- Check that your token is valid and not expired (login again if needed)
+- Ensure the Authorization header format is exactly: `Bearer YOUR_TOKEN_HERE` (with a space after "Bearer")
+
 ## 📚 Next Steps
 
 1. Read the full [SETUP.md](./SETUP.md) for detailed instructions
