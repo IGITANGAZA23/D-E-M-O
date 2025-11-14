@@ -3,12 +3,15 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { VerifyTwoFactorLoginDto } from './dto/verify-2fa-login.dto';
+import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login/:role')
+  @ApiBody({ type: LoginDto })
   async login(
     @Body() loginDto: LoginDto,
     @Param('role') role: string,
@@ -17,7 +20,7 @@ export class AuthController {
     if (role !== 'user' && role !== 'librarian') {
       throw new BadRequestException('Invalid role. Must be "user" or "librarian"');
     }
-    
+
     // Extract IP address from request
     const ipAddress =
       (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
@@ -29,6 +32,7 @@ export class AuthController {
   }
 
   @Post('verify-2fa/:role')
+  @ApiBody({ type: VerifyTwoFactorLoginDto })
   async verifyTwoFactor(
     @Body() verifyDto: VerifyTwoFactorLoginDto,
     @Param('role') role: string,
@@ -53,4 +57,3 @@ export class AuthController {
     );
   }
 }
-
