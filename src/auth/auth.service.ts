@@ -53,65 +53,28 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if 2FA is enabled
-    if (entity.isTwoFactorEnabled) {
-      // Send 2FA code via email
-      await this.twoFactorService.sendTwoFactorCode(
-        entity.id,
-        role,
-        entity.email,
-        entity.name,
-      );
+    // Always require 2FA for every login attempt
+    await this.twoFactorService.sendTwoFactorCode(
+      entity.id,
+      role,
+      entity.email,
+      entity.name,
+    );
 
-      // Return a temporary token that requires 2FA verification
-      const tempPayload: JwtPayload = {
-        sub: entity.id,
-        email: entity.email,
-        role: role,
-      };
-
-      // Create a short-lived token for 2FA verification (10 minutes)
-      const tempToken = this.jwtService.sign(tempPayload, { expiresIn: '10m' });
-
-      return {
-        requiresTwoFactor: true,
-        tempToken: tempToken,
-        message: '2FA code has been sent to your email. Please check your inbox and provide the code.',
-        user: {
-          id: entity.id,
-          email: entity.email,
-          name: entity.name,
-          role: role,
-        },
-      };
-    }
-
-    // No 2FA required - proceed with normal login
-    const payload: JwtPayload = {
+    // Return a temporary token that requires 2FA verification
+    const tempPayload: JwtPayload = {
       sub: entity.id,
       email: entity.email,
       role: role,
     };
 
-    const loginTime = new Date();
-
-    // Send login notification email (non-blocking)
-    this.emailService
-      .sendLoginNotification(
-        entity.email,
-        entity.name,
-        role,
-        loginTime,
-        ipAddress,
-      )
-      .catch((error) => {
-        // Log error but don't fail the login
-        // Error is already logged in EmailService
-      });
+    // Create a short-lived token for 2FA verification (10 minutes)
+    const tempToken = this.jwtService.sign(tempPayload, { expiresIn: '10m' });
 
     return {
-      requiresTwoFactor: false,
-      access_token: this.jwtService.sign(payload),
+      requiresTwoFactor: true,
+      tempToken: tempToken,
+      message: '2FA code has been sent to your email. Please check your inbox and provide the code.',
       user: {
         id: entity.id,
         email: entity.email,
