@@ -226,7 +226,7 @@ This is an automated notification. Please do not reply to this email.
                     <tr>
                         <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">
-                                🔐 Confirm Login to RCA Library Mnagement System
+                                🔐 Confirm Login to RCA Library Management System
                             </h1>
                         </td>
                     </tr>
