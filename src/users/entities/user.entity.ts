@@ -23,7 +23,7 @@ export class User {
   name: string;
 
   @Column({ nullable: true })
-  twoFactorSecret: string;
+  twoFactorSecret: string | null;
 
   @Column({ default: false })
   isTwoFactorEnabled: boolean;

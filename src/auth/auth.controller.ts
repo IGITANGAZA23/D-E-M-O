@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Param, BadRequestException, Req } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { VerifyTwoFactorLoginDto } from './dto/verify-2fa-login.dto';

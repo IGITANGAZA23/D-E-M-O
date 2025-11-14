@@ -21,7 +21,7 @@ export class Librarian {
   name: string;
 
   @Column({ nullable: true })
-  twoFactorSecret: string;
+  twoFactorSecret: string | null;
 
   @Column({ default: false })
   isTwoFactorEnabled: boolean;
