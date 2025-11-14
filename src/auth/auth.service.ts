@@ -69,7 +69,7 @@ export class AuthService {
       )
       .catch((error) => {
         // Log error but don't fail the login
-        console.error('Failed to send login notification email:', error);
+        // Error is already logged in EmailService
       });
 
     return {

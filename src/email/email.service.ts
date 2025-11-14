@@ -190,15 +190,20 @@ This is an automated notification. Please do not reply to this email.
     };
 
     if (!this.isEmailConfigured) {
-      this.logger.debug('Email not configured, skipping login notification');
+      this.logger.warn(`Email not configured - skipping login notification for ${email}. Please set SMTP_USER and SMTP_PASS in .env file.`);
       return;
     }
 
     try {
-      await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Login notification email sent to ${email}`);
+      this.logger.log(`Attempting to send login notification email to ${email}...`);
+      const info = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`✅ Login notification email sent successfully to ${email}. Message ID: ${info.messageId}`);
     } catch (error) {
-      this.logger.error(`Failed to send login notification email to ${email}:`, error);
+      this.logger.error(`❌ Failed to send login notification email to ${email}:`, error);
+      this.logger.error(`Error details: ${error.message}`);
+      if (error.response) {
+        this.logger.error(`SMTP Response: ${error.response}`);
+      }
       // Don't throw error - email failure shouldn't break login
     }
   }
