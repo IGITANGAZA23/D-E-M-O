@@ -22,6 +22,12 @@ export class User {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  twoFactorSecret: string;
+
+  @Column({ default: false })
+  isTwoFactorEnabled: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

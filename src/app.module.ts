@@ -9,6 +9,7 @@ import { LibrariansModule } from './librarians/librarians.module';
 import { AuthModule } from './auth/auth.module';
 import { BorrowRecordsModule } from './borrow-records/borrow-records.module';
 import { EmailModule } from './email/email.module';
+import { TwoFactorModule } from './two-factor/two-factor.module';
 import { Book } from './books/entities/book.entity';
 import { User } from './users/entities/user.entity';
 import { Librarian } from './librarians/entities/librarian.entity';
@@ -30,6 +31,7 @@ import { BorrowRecord } from './borrow-records/entities/borrow-record.entity';
       synchronize: process.env.NODE_ENV !== 'production', // Only for development
     }),
     EmailModule,
+    TwoFactorModule,
     BooksModule,
     UsersModule,
     LibrariansModule,

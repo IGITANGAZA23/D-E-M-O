@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TwoFactorModule } from '../two-factor/two-factor.module';
 import { User } from '../users/entities/user.entity';
 import { Librarian } from '../librarians/entities/librarian.entity';
 
@@ -13,6 +14,7 @@ import { Librarian } from '../librarians/entities/librarian.entity';
   imports: [
     TypeOrmModule.forFeature([User, Librarian]),
     PassportModule,
+    TwoFactorModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
