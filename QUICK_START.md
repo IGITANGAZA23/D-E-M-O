@@ -39,9 +39,18 @@ DB_DATABASE=library_management
 JWT_SECRET=my-super-secret-jwt-key-12345
 PORT=3000
 NODE_ENV=development
+
+# Email Configuration (SMTP) - Optional but recommended
+# See EMAIL_SETUP.md for detailed setup instructions
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
 ```
 
 **⚠️ Replace `YOUR_POSTGRES_PASSWORD_HERE` with your actual PostgreSQL password!**
+
+**📧 Email Setup (Optional):** To enable login notification emails, configure the SMTP settings. See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for detailed instructions. If you skip this, the app will still work but won't send email notifications.
 
 ### Step 5: Run the Application
 ```bash
