@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Param, BadRequestException, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -7,11 +8,23 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login/:role')
-  async login(@Body() loginDto: LoginDto, @Param('role') role: string) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Param('role') role: string,
+    @Req() req: Request,
+  ) {
     if (role !== 'user' && role !== 'librarian') {
       throw new BadRequestException('Invalid role. Must be "user" or "librarian"');
     }
-    return this.authService.login(loginDto, role as 'user' | 'librarian');
+    
+    // Extract IP address from request
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      (req.headers['x-real-ip'] as string) ||
+      req.socket.remoteAddress ||
+      'Unknown';
+
+    return this.authService.login(loginDto, role as 'user' | 'librarian', ipAddress);
   }
 }
 
