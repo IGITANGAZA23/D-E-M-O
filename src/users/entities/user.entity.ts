@@ -22,7 +22,7 @@ export class User {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   twoFactorSecret: string | null;
 
   @Column({ default: false })
