@@ -3,14 +3,11 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS
   app.enableCors();
-  
 
   //swagger setup
   const config = new DocumentBuilder()
@@ -30,7 +27,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
